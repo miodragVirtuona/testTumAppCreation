@@ -1,0 +1,18 @@
+#Store change to build properties file
+#Wed Jul 09 11:38:21 CEST 2025
+dev.solution.server=dev.virtuona.rs
+project.appontos.uri=http\://localhost/testing_scas/resources/TasorProjects/miodragTestingTum1AppOntos
+service.tasor.url=http\://dev.virtuona.rs/virtdev/rdfTasor
+application.type=miodragTestingTum1
+project.apptype.uri=http\://localhost/testing_scas/resources/TasorProjects/miodragTestingTum1AppType
+application.version=01.01
+account.pass=5cfQTS68pD
+project.appontos.default.uri=??BASE_APP_ONTOS_PROJECT_URI
+project.appkb.default.uri=??BASE_APP_KB_PROJECT_URI
+dev.solution.name=virtdev
+account.name=twcdeveloper
+application.instance=default
+project.appkb.uri=http\://localhost/testing_scas/resources/TasorProjects/miodragTestingTum1AppKB
+fu.uri=http\://localhost/testing_scas/resources/TasorUnitManagerAppKB/RID02decd16-f949-4286-8a02-fdf038dc2a72
+application.default.name=??BASE_APP_NAME
+project.apptype.default.uri=??BASE_APP_TYPE_PROJECT_URI
