@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <!--META-->
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="Content-Type" content="text/html" />
+        <meta name="robots" content="noindex,nofollow" />
+
+        <!--PAGE DESCRIPTION-->
+        <title data-lan-key="APP_TAB_TITLE">Tasor</title>
+        <link rel="fav icon" href="assets/favicon.ico" />
+
+        <!-- SHARED_LIBS CSS -->
+        <link rel="stylesheet" type="text/css" href="../tccaclient/com/sharedLibs/bootstrap/css/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="../tccaclient/com/sharedLibs/fontawesome/css/font-awesome.min.css">
+
+        <!--STANDARD CSS-->
+        <link type="text/css" href="../tccaclient/com/tagleen/ajax/Tasor.min.css?cvid=??CVID" rel="stylesheet" />
+        <link type="text/css" href="../tccaclient/com/tagleen/tasorstyles/tasor-app-style.min.css?cvid=??CVID" rel="stylesheet" />
+
+        <!-- SHARED_LIBS JS -->
+        <script type="text/javascript" src='../tccaclient/com/sharedLibs/jquery/jquery-1.11.2.min.js'></script>
+        <script type="text/javascript" src='../tccaclient/com/sharedLibs/jquery/jquery-ui.min.js'></script>
+        <script type="text/javascript" src='../tccaclient/com/sharedLibs/bootstrap/js/bootstrap.min.js'></script>
+
+        <!--STANDARD JS-->
+        <script type="text/javascript" src='js/config.js?cvid=??CVID'></script>
+        <script type="text/javascript" src='js/vocabulary.js?cvid=??CVID'></script>
+	<script type="text/javascript" src='js/feedback.js?cvid=??CVID'></script>
+        <script type="text/javascript" src='../tccaclient/com/tagleen/ajax/Tagleen.min.js?cvid=??CVID'></script>
+
+        <!--******* PAGE SPECIFICs START *******-->
+
+        <!--SPECIFIC JS-->
+        <script type="text/javascript" src="../tccaclient/com/tagleen/ajax/application/MenuApp.js"></script>
+        <script type="text/javascript" src='../tccaclient/com/tagleen/ajax/configuration/UserAppConf.js?cvid=??CVID'></script>
+		<script type="text/javascript" src='../tccaclient/com/tagleen/ajax/configuration/AppConf.js?cvid=??CVID'></script>
+        <script type="text/javascript" src='../tccaclient/com/tagleen/ajax/configuration/ConfigurationManager.js?cvid=??CVID'></script>
+
+        <!--PAGE CSS LIBS-->
+
+        <!--MENU-->
+        <link type="text/css" href="../tccaclient/com/tagleen/ajax/navigation/TasorMenuBootstrap4.css?cvid=??CVID" rel="stylesheet" />
+
+        <!--PAGE JS LIBS-->
+        <script type="text/javascript" src='js/TasorLanguageSelector.js?cvid=??CVID'></script>
+        <!--*******PAGE SPECIFIC LIBS END*******-->
+
+    </head>
+
+    <body>
+
+	<!-- Navigation -->
+    <nav class="navbar navbar-dark navbar-expand-md navbar-fixed-top">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button class="navbar-toggler float-right my-2" type="button" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-controls="bs-example-navbar-collapse-1" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <a class="landing-page-home" href="../" data-lan-key="HOME_BTN_TITLE" data-lan-attr="title">
+                    <i class="fa fa-home" aria-hidden="true"></i>
+                </a>
+                <a class="navbar-brand" href="index.html">
+                    <img alt="Brand" src="assets/menu-logo.png">
+                </a>
+            </div>
+            <div id="bs-example-navbar-collapse-1" class="collapse navbar-collapse">
+                <ul class="nav navbar-nav tasor-navbar-nav mr-auto"></ul>
+                <!-- <ul class="nav navbar-nav navbar-right"></ul> -->
+                <ul class="tasor-language-navbar nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a href="" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" data-lan-key="LANGUAGE_BTN_TITLE" data-lan-attr="title"> </a>
+                        <ul class="dropdown-menu"></ul>
+                    </li>
+                </ul>
+                <ul class="tasor-feedback nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a class="contactus-toggled" href="" data-lan-key="FEEDBACK_BTN_TITLE" data-lan-attr="title">
+                            <i class="fa fa-commenting-o"></i>
+                        </a>
+                    </li>
+                </ul>
+                <div class="userComponent nav navbar-nav navbar-right" data-lan-key="USER_BTN_TITLE" data-lan-attr="title"></div>
+            </div>
+        </div>
+    </nav>
+    <!-- /Navigation -->
+
+        <!-- Feedback -->
+        <div class="hidden tasor-feedback-container">
+            <button type="button" class="btn btn-default close-feedback-btn"><i class="fa fa-times" aria-hidden="true" style="float: right;"></i></button>
+        </div>
+        <!-- /Feedback -->
+    </body>
+
+</html>
