@@ -1,0 +1,4 @@
+<http://localhost/testing_scas/resources/miodragTestingTum1AppOntos> <http://xmlns.com/foaf/0.1/maker> <http://dev.virtuona.rs/virtdev_scas/resources/UserManagerCentral_data/RIDbb170cf9-9324-4451-ab42-e39519a41060> .
+<http://localhost/testing_scas/resources/miodragTestingTum1AppOntos> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://rdfs.org/ns/void#Dataset> .
+
+

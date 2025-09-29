@@ -1,0 +1,429 @@
+<?xml version="1.0"?>
+<project name="??APP_NAME" default="build.default" basedir=".">
+	<property file="build.properties"/>
+	
+	<property name="file.pers.props" value="local/pers.properties" />
+	<property file="${file.pers.props}"/>
+
+	<fail message="Tasor SCAS account name property must be set" unless="account.name"/>
+	<fail message="Tasor SCAS account password property must be set" unless="account.pass"/>
+
+	<target name="testing">
+		<echo message="${account.name}  ${ftp.usr.pass}"/>
+	</target>
+
+	<!--TOOLS IN BUILD PROCESS-->
+	<property name="dir.tools" value="../TWCbuildtools" />
+	<property name="tools.yuicompressor" value="${dir.tools}/yuicompressor.jar" />
+	<property name="tools.copytemplates" value="${dir.tools}/copytemplates.jar"/>
+	<property name="tools.querycopy" value="${dir.tools}/copyqueries.jar"/>
+	<property name="tools.projectimportexport" value="${dir.tools}/projectimportexport.jar"/>
+	<property name="tools.install" value="${dir.tools}/install.html"/>
+	<property name="tools.updaterequires" value="${dir.tools}/updaterequires.jar"/>
+	<available file="${application.instance}" type="dir" property="check.dir.instance" />
+	<available file="${application.instance}/${application.default.name}" type="dir" property="check.dir.default" />
+	<available file="${dir.tools}" type="dir" property="check.dir.tools" />
+	<fail unless="check.dir.tools" message="SVN Project ${dir.tools} is missing. Checkout it from SVN:tasorwebclient/buildtools/ (you should checkout TRUNK)" />
+
+	<!--FTP properties-->
+	<condition property="ftp.server" value="${dev.solution.server}" else="dev.virtuona.rs">
+		<isset property="dev.solution.server" />
+	</condition>
+	<property name="ftp.usr.name" value="frontend.developer" />
+	<property name="ftp.usr.pass" value="Pa5pEz3EFUCpP3Iq" />
+	<fail message="FTP account name property must be set" unless="ftp.usr.name"/>
+	<fail message="FTP account password property must be set" unless="ftp.usr.pass"/>
+	<condition property="ftp.webapps.folder.name" value="${dev.solution.name}" else="virtdev">
+		<isset property="dev.solution.name" />
+	</condition>
+	<property name="ftp.destination" value="/usr/local/tomcat/webapps/${ftp.webapps.folder.name}/${application.type}" />
+
+	<!--DIRS-->
+	<property name="dir.build" value="${basedir}/${application.instance}/build"/>
+	<property name="dir.builds" value="${basedir}/${application.instance}/builds"/>
+	<property name="dir.projects" value="${application.instance}/tasorProjects"/>
+	<property name="dir.language.src" value="${application.instance}/language"/>
+	<property name="dir.projexport" value="${dir.build}/tasorProjects"/>
+	<property name="dir.clientcode" value="${dir.build}/clientcode"/>
+
+	<!--FILES-->
+	<property name="file.project.zip" value="projects.zip"/>
+	<property name="file.version.zip" value="${application.instance}_V${application.version}.zip"/>
+	<property name="file.version.zip.path" value="${dir.builds}/${file.version.zip}"/>
+	<property name="file.default.version.zip" value="default/builds/${application.default.name}.zip"/>
+	<available file="${file.default.version.zip}" type="file" property="check.file.default.version.zip" />
+
+	<!--CACHE-->
+	<tstamp>
+		<format property="cvid.timestamp" pattern="yyyyMMddHHmmss.sss"/>
+	</tstamp>
+	<property name="cvid" value="${cvid.timestamp}"/>
+
+	<!--ANT BUILD TASKS-->
+
+	<!--Clean-->
+	<target name="clean" description="Clean build folder by removing its content">
+		<echo>Deleting content in build folder</echo>
+		<mkdir dir="${dir.build}"/>
+		<delete includeemptydirs="true" >
+			<fileset dir="${dir.build}" includes="**/*"/>
+		</delete>
+		<mkdir dir="${dir.projexport}"/>
+	</target>
+
+	<target name="build.default">
+		<mkdir dir="${dir.build}"/>
+		<antcall target="clean"></antcall>
+		<antcall target="build.client"></antcall>
+		<antcall target="build.projects"></antcall>
+		<antcall target="build.zip"></antcall>
+	</target>
+
+	<target name="virtuonadev.upload.full" description="Uploads full code of application instance to the Virtuona Dev FTP server">
+		<echo>Deploying</echo>
+		<antcall target="update.language"/>
+		<echo>Building client first</echo>
+		<antcall target="clean"/>
+		<antcall target="build.client"/>
+		<replace file="${dir.clientcode}/tcc_settings.json">
+			<replacefilter token='"application": "../virtdev' value='"application": "../${ftp.webapps.folder.name}'/>
+		</replace>
+		<echo>Uploading application instance ${application.instance} using dir ${dir.clientcode} to remote dir ${ftp.destination}</echo>
+		<echo>Connection: ${ftp.usr.name}:*****@${ftp.server}:${ftp.destination}</echo>
+		<ant target="echotime"/>
+		<scp todir="${ftp.usr.name}:${ftp.usr.pass}@${ftp.server}:${ftp.destination}" trust="true" sftp="true">
+			<fileset dir="${dir.clientcode}"/>
+		</scp>
+		<ant target="echotime"/>
+		<echo>Visit:   http://dev.virtuona.rs/${ftp.webapps.folder.name}/${application.type}</echo>
+	</target>
+
+	<target name="virtuonadev.upload.quick" description="Uploads application's instance js,html,css and language files to the Virtuona Dev FTP server">
+		<echo>Deploying</echo>
+		<antcall target="update.language"/>
+		<echo>Building client first</echo>
+		<antcall target="clean"/>
+		<antcall target="build.client"/>
+		<replace file="${dir.clientcode}/tcc_settings.json">
+			<replacefilter token='"application": "../virtdev' value='"application": "../${ftp.webapps.folder.name}'/>
+		</replace>
+		<echo>Uploading application instance ${application.instance} using dir ${dir.clientcode} to remote dir ${ftp.destination}</echo>
+		<echo>Connection: ${ftp.usr.name}:*****@${ftp.server}:${ftp.destination}</echo>
+		<ant target="echotime"/>
+		<scp todir="${ftp.usr.name}:${ftp.usr.pass}@${ftp.server}:${ftp.destination}" trust="true" sftp="true">
+			<fileset dir="${dir.clientcode}">
+				<exclude name="assets/**"/>
+				<exclude name="lib/**"/>
+				<exclude name="data/**"/>
+			</fileset>
+		</scp>
+		<ant target="echotime"/>
+		<echo>Visit:   http://dev.virtuona.rs/${ftp.webapps.folder.name}/${application.type}</echo>
+	</target>
+
+	<target name="build.zip">
+		<zip destfile="${dir.build}/${application.instance}.zip">
+			<fileset dir="${dir.build}">
+				<exclude name="${application.instance}.zip"/>
+			</fileset>
+		</zip>
+	</target>
+
+	<target name="build.version">
+		<delete includeemptydirs="true" failonerror="false">
+			<fileset dir="${dir.builds}">
+				<include name="**"/>
+			</fileset>
+		</delete>
+		<zip destfile="${file.version.zip.path}">
+			<fileset dir="${dir.build}">
+				<exclude name="${application.instance}.zip"/>
+			</fileset>
+		</zip>
+	</target>
+
+	<target name="build.client">
+		<echo>Copy client code</echo>
+		<!--COPY FROM ROOT-->
+		<copy includeemptydirs="true" todir="${dir.clientcode}" overwrite="true">
+			<fileset dir="${basedir}">
+				<include name="lib/**"/>
+				<include name="tcc_settings.json"/>
+			</fileset>
+		</copy>
+		<!--COPY FROM DEFAULT-->
+		<copy includeemptydirs="true" todir="${dir.clientcode}" overwrite="true" failonerror="false">
+			<fileset dir="${application.instance}/${application.default.name}/clientcode">
+				<include name="*/**"/>
+			</fileset>
+		</copy>
+		<!--COPY FROM INSTANCE-->
+		<copy includeemptydirs="true" todir="${dir.clientcode}" overwrite="true">
+			<fileset dir="${basedir}/${application.instance}">
+				<include name="**"/>
+				<exclude name="**/.svn"/>
+				<exclude name="build/**"/>
+				<exclude name="builds/**"/>
+				<exclude name="documents/**"/>
+				<exclude name="tasorProjects/**"/>
+				<exclude name="build.xml"/>
+				<exclude name="build.properties*"/>
+			</fileset>
+		</copy>
+		<copy includeemptydirs="true" todir="${dir.clientcode}" overwrite="true">
+			<fileset dir="${dir.clientcode}/html">
+				<include name="**"/>
+				<exclude name="**/.svn"/>
+			</fileset>
+		</copy>
+		<delete includeemptydirs="true" failonerror="false">
+			<fileset dir="${dir.clientcode}/${application.default.name}">
+				<include name="**"/>
+			</fileset>
+		</delete>
+		<delete dir="${dir.clientcode}/html"/>
+		<replace token="cvid=??CVID" value="cvid=${cvid}" dir="${dir.clientcode}" encoding="UTF-8" includes="**/*.html"/>
+	</target>
+
+	<target name="update.language">
+		<description>Updates language files by retrieving their content from app type project</description>
+		<echo>Updating language files from project</echo>
+		<java jar="${tools.copytemplates}" fork="true">
+			<arg value="-plainContentType"/>
+			<arg value="http://dev.virtuona.rs/virtdev_scas/resources/TasorApplication/LanguageFile"/>
+			<arg value="-sourceProject"/>
+			<arg value="${project.apptype.uri}"/>
+			<arg value="-tasoruri"/>
+			<arg value="${service.tasor.url}"/>
+			<arg value="-username"/>
+			<arg value="${account.name}"/>
+			<arg value="-userpass"/>
+			<arg value="${account.pass}"/>
+			<arg value="-destinationfolder"/>
+			<arg value="${dir.language.src}"/>
+			<arg value="-operation"/>
+			<arg value="copyFromProject"/>
+			<arg value="-wdsOnly"/>
+		</java>
+	</target>
+
+	<target name="build.projects">
+		<echo>Building application projects</echo>
+		<unzip src="${dir.projects}/${file.project.zip}" dest="${dir.projexport}"/>
+		<echo file="${dir.projexport}/ApplicationProjectsInstallCommand.txt">java -jar projectimportexport.jar -tasorEP ??TASOR_URL -userName ??USER_NAME -workingDir ??DEP_TMP_DIR/tasorProjects -storeURI ??RDF_STORE_URI -operation import -projectURIs ${project.apptype.uri} ${project.appontos.uri} ${project.appkb.uri} -projectNamesMap ${project.apptype.uri} ??PRJ_APP_TYPE_NAME ${project.appontos.uri} ??PRJ_APP_ONTOS_NAME ${project.appkb.uri} ??PRJ_APP_KB_NAME -excludeProjectDSimport ${project.appkb.uri}</echo>
+		<echo file="${dir.projexport}/ApplicationProjectsUpdateCommand.txt">java -jar projectimportexport.jar -tasorEP ??TASOR_URL -userName ??USER_NAME -workingDir ??DEP_TMP_DIR/tasorProjects -storeURI ??RDF_STORE_URI -operation import -projectURIs ${project.apptype.uri} ${project.appontos.uri} ${project.appkb.uri} -projectURIsMap ${project.apptype.uri} ??PRJ_APP_TYPE ${project.appontos.uri} ??PRJ_APP_ONTOS ${project.appkb.uri} ??PRJ_APP_KB -excludeProjectDSimport ${project.appkb.uri}</echo>
+	</target>
+
+	<target name="updateAllProjects">
+		<echo message="Exporting projects ${project.apptype.uri}, ${project.appontos.uri} and ${project.appkb.uri}"/>
+		<echo message="Tasor EP ${service.tasor.url}"/>
+		<echo message="User name ${account.name}"/>
+		<mkdir dir="${dir.projects}/tmp"/>
+		<java jar="${tools.projectimportexport}" fork="true">
+			<arg value="-projectURIs"/>
+			<arg value="${project.apptype.uri}"/>
+			<arg value="${project.appontos.uri}"/>
+			<arg value="${project.appkb.uri}"/>
+			<arg value="-tasorEP"/>
+			<arg value="${service.tasor.url}"/>
+			<arg value="-userName"/>
+			<arg value="${account.name}"/>
+			<arg value="-userPass"/>
+			<arg value="${account.pass}"/>
+			<arg value="-workingDir"/>
+			<arg value="${dir.projects}/tmp"/>
+			<arg value="-destPath"/>
+			<arg value="${dir.projects}/tmp/appout.txt"/>
+			<arg value="-excludePCexport"/>
+			<arg value="${project.appkb.uri}"/>
+			<arg value="-excludeProjectDSexport"/>
+			<arg value="${project.appkb.uri}"/>
+			<arg value="-operation"/>
+			<arg value="export"/>
+		</java>
+		<zip destfile="${dir.projects}/${file.project.zip}" basedir="${dir.projects}/tmp"/>
+		<delete includeemptydirs="true">
+			<fileset dir="${dir.projects}/tmp">
+				<include name="**"/>
+			</fileset>
+		</delete>
+	</target>
+
+	<target name="updateTypeAndOntosProjects">
+		<echo message="Exporting projects ${project.apptype.uri} and ${project.appontos.uri}"/>
+		<echo message="Tasor EP ${service.tasor.url}"/>
+		<echo message="User name ${account.name}"/>
+		<mkdir dir="${dir.projects}/tmp"/>
+		<java jar="${tools.projectimportexport}" fork="true">
+			<arg value="-projectURIs"/>
+			<arg value="${project.apptype.uri}"/>
+			<arg value="${project.appontos.uri}"/>
+			<arg value="-tasorEP"/>
+			<arg value="${service.tasor.url}"/>
+			<arg value="-userName"/>
+			<arg value="${account.name}"/>
+			<arg value="-userPass"/>
+			<arg value="${account.pass}"/>
+			<arg value="-workingDir"/>
+			<arg value="${dir.projects}/tmp"/>
+			<arg value="-destPath"/>
+			<arg value="${dir.projects}/tmp/appout.txt"/>
+			<arg value="-operation"/>
+			<arg value="export"/>
+		</java>
+		<zip destfile="${dir.projects}/${file.project.zip}" basedir="${dir.projects}/tmp"/>
+		<delete includeemptydirs="true">
+			<fileset dir="${dir.projects}/tmp">
+				<include name="**"/>
+			</fileset>
+		</delete>
+	</target>
+
+	<target name="updateNamedActions">
+		<echo>Download Named Actions for all projects</echo>
+		<mkdir dir="${dir.projects}/apptype/namedActions"/>
+		<java jar="${tools.querycopy}" fork="true">
+			<arg value="-projecturi"/>
+			<arg value="${project.apptype.uri}"/>
+			<arg value="-tasoruri"/>
+			<arg value="${service.tasor.url}"/>
+			<arg value="-username"/>
+			<arg value="${account.name}"/>
+			<arg value="-userpass"/>
+			<arg value="${account.pass}"/>
+			<arg value="-destinationfolder"/>
+			<arg value="${dir.projects}/apptype/namedActions"/>
+			<arg value="-strict"/>
+		</java>
+		<mkdir dir="${dir.projects}/appontos/namedActions"/>
+		<java jar="${tools.querycopy}" fork="true">
+			<arg value="-projecturi"/>
+			<arg value="${project.appontos.uri}"/>
+			<arg value="-tasoruri"/>
+			<arg value="${service.tasor.url}"/>
+			<arg value="-username"/>
+			<arg value="${account.name}"/>
+			<arg value="-userpass"/>
+			<arg value="${account.pass}"/>
+			<arg value="-destinationfolder"/>
+			<arg value="${dir.projects}/appontos/namedActions"/>
+			<arg value="-strict"/>
+		</java>
+		<mkdir dir="${dir.projects}/appkb/namedActions"/>
+		<java jar="${tools.querycopy}" fork="true">
+			<arg value="-projecturi"/>
+			<arg value="${project.appkb.uri}"/>
+			<arg value="-tasoruri"/>
+			<arg value="${service.tasor.url}"/>
+			<arg value="-username"/>
+			<arg value="${account.name}"/>
+			<arg value="-userpass"/>
+			<arg value="${account.pass}"/>
+			<arg value="-destinationfolder"/>
+			<arg value="${dir.projects}/appkb/namedActions"/>
+			<arg value="-strict"/>
+		</java>
+	</target>
+ 	<!-- updateRequires task: -->
+	<target name="updateRequires">
+	    <fail message="Could not update requires because property fu.uri is not set">
+	        <condition><or>
+	            <equals arg1="${fu.uri}" arg2=""/>
+	            <not><isset property="fu.uri"/></not>
+	        </or></condition>
+	    </fail>
+	    <property name="dir.output" value="${basedir}/${application.instance}/js"/>
+	    <echo>Updating Requires</echo>
+	    <java jar="${tools.updaterequires}" fork="true">
+	        <arg value="-fuuri"/>
+	        <arg value="${fu.uri}"/>
+	        <arg value="-pass"/>
+	        <arg value="${account.pass}"/>
+	        <arg value="-user"/>
+	        <arg value="${account.name}"/>
+	        <arg value="-outputdir"/>
+	        <arg value="${dir.output}"/>
+		<!-- <arg value="${dir.output}/generated"/> - For testing purposes to generate config.js file in the generated folder -->
+	    </java>
+	</target>
+
+	<!--INSTANCE CREATION-->
+	<target name="create.instance">
+		<echo message="Creating new instance ${application.instance}"/>
+		<fail if="check.dir.instance" message="Folder with instance ${application.instance} already exists"/>
+		<fail unless="check.file.default.version.zip" message="Default version file ${file.default.version.zip} does not exists"/>
+		<mkdir dir="${application.instance}"/>
+		<mkdir dir="${application.instance}/${application.default.name}"/>
+		<copy todir="${application.instance}" overwrite="true" includeemptydirs="true">
+			<fileset dir="default/">
+				<exclude name="build/"/>
+				<type type="dir">
+				</type>
+			</fileset>
+		</copy>
+		<unzip dest="${application.instance}/${application.default.name}" src="${file.default.version.zip}"></unzip>
+		<zip destfile="${application.instance}/${application.default.name}/tasorProjects/tasorProjects.zip" basedir="${application.instance}/${application.default.name}/tasorProjects"></zip>
+		<delete includeemptydirs="true">
+			<fileset dir="${application.instance}/${application.default.name}/tasorProjects">
+				<include name="**/*"/>
+				<exclude name="tasorProjects.zip"/>
+			</fileset>
+		</delete>
+		<delete includeemptydirs="true">
+			<fileset dir="${application.instance}/${application.default.name}/clientcode">
+				<include name="builds/"/>
+			</fileset>
+		</delete>
+	</target>
+
+	<target name="import.projects.all">
+		<unzip dest="${application.instance}/${application.default.name}/tasorProjects/tmp" src="${application.instance}/${application.default.name}/tasorProjects/tasorProjects.zip"></unzip>
+		<echo message="Importing to projects ${project.apptype.uri} and ${project.appontos.uri}"/>
+		<echo message="Tasor EP ${service.tasor.url}"/>
+		<echo message="User name ${account.name}"/>
+		<java jar="${tools.projectimportexport}" fork="true">
+			<arg value="-projectURIs"/>
+			<arg value="${project.apptype.default.uri}"/>
+			<arg value="${project.appontos.default.uri}"/>
+			<arg value="${project.appkb.default.uri}"/>
+			<arg value="-projectURIsMap"/>
+			<arg value="${project.apptype.default.uri}"/>
+			<arg value="${project.apptype.uri}"/>
+			<arg value="${project.appontos.default.uri}"/>
+			<arg value="${project.appontos.uri}"/>
+			<arg value="${project.appkb.default.uri}"/>
+			<arg value="${project.appkb.uri}"/>
+			<arg value="-excludeProjectDSimport"/>
+			<arg value="${project.appkb.default.uri}"/>
+			<arg value="-tasorEP"/>
+			<arg value="${service.tasor.url}"/>
+			<arg value="-userName"/>
+			<arg value="${account.name}"/>
+			<arg value="-userPass"/>
+			<arg value="${account.pass}"/>
+			<arg value="-workingDir"/>
+			<arg value="${application.instance}/${application.default.name}/tasorProjects/tmp"/>
+			<arg value="-operation"/>
+			<arg value="import"/>
+			<arg value="-replaceAlso"/>
+			<arg value="${project.appkb.default.uri}"/>
+			<arg value="${project.appkb.uri}"/>
+			<arg value="${project.appkb.default.uri}_namedQueries"/>
+			<arg value="${project.appkb.uri}_namedQueries"/>
+			<arg value="-projectDSsOnly"/>
+		</java>
+		<delete includeemptydirs="true">
+			<fileset dir="${application.instance}/${application.default.name}/tasorProjects/">
+				<include name="tmp/"/>
+			</fileset>
+		</delete>
+	</target>
+
+	<target name="echotime">
+		<tstamp>
+			<format property="current.time" pattern="MM/dd/yyyy hh:mm:ss aa" />
+		</tstamp>
+		<echo message="${current.time}" />
+	</target>
+
+</project>
